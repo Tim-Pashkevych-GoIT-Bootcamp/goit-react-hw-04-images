@@ -1,0 +1,21 @@
+.loaderBackdrop {
+  width: 100%;
+  height: 100%;
+  position: fixed;
+  left: 0;
+  top: 0;
+}
+
+.loaderModal {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.loader {
+  justify-content: center;
+}

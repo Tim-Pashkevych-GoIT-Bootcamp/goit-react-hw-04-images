@@ -1,0 +1,34 @@
+name: Build and deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout 🛎️
+        uses: actions/checkout@v2.3.1
+
+      - name: Create env file
+        env:
+          REACT_APP_PEXELX_KEY: ${{ secrets.PEXELX_KEY }}
+          REACT_APP_PIXABAY_KEY: ${{ secrets.PIXABAY_KEY }}
+        run: |
+          touch .env
+          echo REACT_APP_PEXELX_KEY = \"$REACT_APP_PEXELX_KEY\" >> .env
+          echo \n >> .env
+          echo REACT_APP_PIXABAY_KEY = \"$REACT_APP_PIXABAY_KEY\" >> .env
+
+      - name: Install, lint, build 🔧
+        run: |
+          npm install
+          npm run lint:js
+          npm run build
+
+      - name: Deploy 🚀
+        uses: JamesIves/github-pages-deploy-action@4.1.0
+        with:
+          branch: gh-pages
+          folder: build
