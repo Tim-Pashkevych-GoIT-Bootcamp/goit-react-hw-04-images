@@ -1,40 +1,35 @@
-import React, { Component } from 'react';
+import { useEffect, useState } from 'react';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import * as API from '../utils/apiPexels';
 import { Button, Searchbar, ImageGallery, Loader, Modal } from 'components';
 
-const INITIAL_STATE = {
-  keyword: '',
-  page: 1,
-  total: 0,
-  images: [],
-  showLoader: false,
-};
+export const App = () => {
+  const [keyword, setKeyword] = useState('');
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [images, setImages] = useState([]);
+  const [showLoader, setShowLoader] = useState(false);
 
-export class App extends Component {
-  state = { ...INITIAL_STATE };
+  useEffect(() => {
+    (async () => {
+      if (keyword === '') {
+        setImages([]);
+        return;
+      }
 
-  async componentDidUpdate(prevProps, prevState) {
-    if (
-      prevState.keyword !== this.state.keyword ||
-      prevState.page !== this.state.page
-    ) {
-      const { images, total } = await this.getImages();
-      this.setState(prevState => ({
-        images: [...prevState.images, ...images],
-        total,
-      }));
-    }
-  }
+      const { images, total } = await getImages();
+      setImages(prev => [...prev, ...images]);
+      setTotal(total);
+    })();
+  }, [keyword, page]);
 
-  getImages = async () => {
+  const getImages = async () => {
     let response = { images: [], total: 0 };
-    const { page, keyword } = this.state;
 
     try {
       // Show loader
-      this.toggleLoader();
+      toggleLoader();
       // Fetch data
       response = await API.getImages(keyword, page);
     } catch (error) {
@@ -42,53 +37,52 @@ export class App extends Component {
       toast.error(error.message);
     } finally {
       // Hide loader
-      this.toggleLoader();
+      toggleLoader();
     }
 
     return response;
   };
 
-  updateKeyword = keyword => {
-    this.setState({ ...INITIAL_STATE, keyword });
+  const updateKeyword = keyword => {
+    setKeyword(keyword);
+    setPage(1);
+    setTotal(0);
+    setImages([]);
   };
 
-  toggleLoader = () => {
-    this.setState(prevState => ({ showLoader: !prevState.showLoader }));
+  const toggleLoader = () => {
+    setShowLoader(prev => !prev);
   };
 
-  loadMoreClick = () => {
-    this.setState(prevState => ({ page: prevState.page + 1 }));
+  const loadMoreClick = () => {
+    setPage(prev => prev + 1);
   };
 
-  render() {
-    const { images, total, keyword } = this.state;
+  return (
+    <>
+      <Searchbar onSubmit={updateKeyword} />
 
-    return (
-      <>
-        <Searchbar onSubmit={this.updateKeyword} />
+      {images.length > 0 && (
+        <ImageGallery
+          keyword={keyword}
+          images={images}
+          toggleLoader={toggleLoader}
+        />
+      )}
 
-        {images.length > 0 && (
-          <ImageGallery
-            keyword={keyword}
-            images={images}
-            toggleLoader={this.toggleLoader}
-          />
-        )}
+      {images.length < total && (
+        <Button type="button" onClick={loadMoreClick}>
+          Load more
+        </Button>
+      )}
 
-        {images.length < total && (
-          <Button type="button" onClick={this.loadMoreClick}>
-            Load more
-          </Button>
-        )}
+      {showLoader && (
+        <Modal>
+          <Loader />
+        </Modal>
+      )}
 
-        {this.state.showLoader && (
-          <Modal>
-            <Loader />
-          </Modal>
-        )}
-
-        <ToastContainer autoClose={3000} />
-      </>
-    );
-  }
-}
+      <ToastContainer autoClose={3000} />
+    </>
+  );
+};
