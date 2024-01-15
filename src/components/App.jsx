@@ -18,30 +18,23 @@ export const App = () => {
         return;
       }
 
-      const { images, total } = await getImages();
-      setImages(prev => [...prev, ...images]);
-      setTotal(total);
+      try {
+        // Show loader
+        toggleLoader();
+        // Fetch data
+        const { images, total } = await API.getImages(keyword, page);
+        // Update state
+        setImages(prev => [...prev, ...images]);
+        setTotal(total);
+      } catch (error) {
+        // Show error
+        toast.error(error.message);
+      } finally {
+        // Hide loader
+        toggleLoader();
+      }
     })();
   }, [keyword, page]);
-
-  const getImages = async () => {
-    let response = { images: [], total: 0 };
-
-    try {
-      // Show loader
-      toggleLoader();
-      // Fetch data
-      response = await API.getImages(keyword, page);
-    } catch (error) {
-      // Show error
-      toast.error(error.message);
-    } finally {
-      // Hide loader
-      toggleLoader();
-    }
-
-    return response;
-  };
 
   const updateKeyword = keyword => {
     setKeyword(keyword);
